@@ -1,0 +1,2 @@
+The mean-squared error results in 0.89, which is close to 0,
+however when looking at the plot of the targets vs predicted it's seen that the prediction is not very good. 
