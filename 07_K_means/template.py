@@ -38,7 +38,11 @@ def distance_matrix(
     where out[i, j] is the euclidian distance between X[i, :]
     and Mu[j, :]
     '''
-    pass
+    D = np.zeros((X.shape[0], Mu.shape[0]))
+    for i in range(X.shape[0]):
+        for j in range(Mu.shape[0]):
+            D[i, j] = np.linalg.norm(X[i, :] - Mu[j, :])
+    return D
 
 
 def determine_r(dist: np.ndarray) -> np.ndarray:
@@ -53,7 +57,10 @@ def determine_r(dist: np.ndarray) -> np.ndarray:
     out (np.ndarray): A [n x k] array where out[i, j] is
     1 if sample i is closest to prototype j and 0 otherwise.
     '''
-    pass
+    A = np.zeros(dist.shape)
+    for i in range(dist.shape[0]):
+        A[i, np.argmin(dist[i, :])] = 1
+    return A
 
 
 def determine_j(R: np.ndarray, dist: np.ndarray) -> float:
@@ -70,7 +77,8 @@ def determine_j(R: np.ndarray, dist: np.ndarray) -> float:
     Returns:
     * out (float): The value of the objective function
     '''
-    pass
+    total_dist = np.sum(R*dist)
+    return total_dist/np.sum(R)
 
 
 def update_Mu(
@@ -90,7 +98,10 @@ def update_Mu(
     Returns:
     out (np.ndarray): A [k x f] array of updated prototypes.
     '''
-    pass
+    Mu_new = np.zeros(Mu.shape)
+    for i in range(Mu.shape[0]):
+        Mu_new[i, :] = np.sum(R[:, i].reshape(-1, 1)*X, axis=0)/np.sum(R[:, i])
+    return Mu_new
 
 
 def k_means(
@@ -108,21 +119,44 @@ def k_means(
     nn = sk.utils.shuffle(range(X_standard.shape[0]))
     Mu = X_standard[nn[0: k], :]
 
-    # !!! Your code here !!!
+    j = np.zeros(num_its)
+    for i in range(num_its):
+        # We calculate the distance matrix
+        D = distance_matrix(X_standard, Mu)
+        # We determine the indicators
+        R = determine_r(D)
+        J = determine_j(R, D)
+        # We update the prototypes
+        Mu = update_Mu(Mu, X_standard, R)
+        j[i] = J
 
     # Then we have to "de-standardize" the prototypes
     for i in range(k):
         Mu[i, :] = Mu[i, :] * X_std + X_mean
 
-    # !!! Your code here !!!
-
+    return Mu, R, j
 
 def _plot_j():
-    pass
+    plt.figure()
+    X, y, c = load_iris()
+    _,_,j = k_means(X, 4, 10)
+    plt.plot(j)
+    plt.xlabel('Iteration')
+    plt.ylabel('J')
+    #plt.show()
 
 
 def _plot_multi_j():
-    pass
+    plt.figure()
+    k = [2,3,5,10]
+    X, y, c = load_iris()
+    for i in k:
+        _,_,j = k_means(X, i, 10)
+        plt.plot(j, label = f'k = {i}')
+    plt.xlabel('Iteration')
+    plt.ylabel('J')
+    plt.legend()
+    #plt.show()
 
 
 def k_means_predict(
@@ -146,15 +180,29 @@ def k_means_predict(
     Returns:
     * the predictions (list)
     '''
-    pass
+    _, R, _ = k_means(X, len(classes), num_its)
+    pred = np.zeros(t.shape)
+    for i in range(len(classes)):
+        cluster = np.argmax(np.sum(R[t == classes[i], :], axis = 0))
+        pred[R[:, cluster] == 1] = classes[i]
+
+        
+    return pred
 
 
 def _iris_kmeans_accuracy():
-    pass
+    X, y, c = load_iris()
+    pred = k_means_predict(X, y, c, 5)
+    print(accuracy_score(y, pred))
+    print(confusion_matrix(y, pred))
 
 
 def _my_kmeans_on_image():
-    pass
+    image, (w, h) = image_to_numpy()
+    print(image.shape)
+    output = k_means(image, 7, 5)
+    # plt.imshow(output[0].reshape(w, h, 3))
+    # plt.show()
 
 
 def plot_image_clusters(n_clusters: int):
@@ -162,10 +210,82 @@ def plot_image_clusters(n_clusters: int):
     Plot the clusters found using sklearn k-means.
     '''
     image, (w, h) = image_to_numpy()
-    ...
-    plt.subplot('121')
+    kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(image)
+    plt.subplot(121)
     plt.imshow(image.reshape(w, h, 3))
-    plt.subplot('122')
+    plt.subplot(122)
     # uncomment the following line to run
-    # plt.imshow(kmeans.labels_.reshape(w, h), cmap="plasma")
+    plt.imshow(kmeans.labels_.reshape(w, h), cmap="plasma")
     plt.show()
+
+
+if '__main__' == __name__:
+#1.1
+    a = np.array([
+        [1, 0, 0],
+        [4, 4, 4],
+        [2, 2, 2]])
+    b = np.array([
+        [0, 0, 0],
+        [4, 4, 4]])
+    #print(distance_matrix(a, b))
+
+#1.2
+    dist = np.array([
+        [  1,   2,   3],
+        [0.3, 0.1, 0.2],
+        [  7,  18,   2],
+        [  2, 0.5,   7]])
+    #print(determine_r(dist))
+
+#1.3
+    dist = np.array([
+            [  1,   2,   3],
+            [0.3, 0.1, 0.2],
+            [  7,  18,   2],
+            [  2, 0.5,   7]])
+    R = determine_r(dist)
+    #print(determine_j(R, dist))
+
+#1.4
+    X = np.array([
+        [0, 1, 0],
+        [1, 0, 0],
+        [0, 0, 0]])
+    Mu = np.array([
+        [0.0, 0.5, 0.1],
+        [0.8, 0.2, 0.3]])
+    R = np.array([
+        [1, 0],
+        [0, 1],
+        [1, 0]])
+    #print(update_Mu(Mu, X, R))
+
+#1.5
+
+    X, y, c = load_iris()
+    #print(k_means(X, 4, 10))
+
+#1.6
+    _plot_j()
+
+#1.7
+    _plot_multi_j()
+
+    #plt.show()
+
+
+#1.9
+    X, y, c = load_iris()
+    print(k_means_predict(X, y, c, 5))
+
+
+#1.10
+    _iris_kmeans_accuracy()
+
+#2.1 
+    #_my_kmeans_on_image()
+    # plot_image_clusters(2)
+    # plot_image_clusters(5)
+    # plot_image_clusters(10)
+    # plot_image_clusters(20)

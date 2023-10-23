@@ -11,11 +11,11 @@ def get_titanic():
     # Load in the raw data
     # check if data directory exists for Mimir submissions
     # DO NOT REMOVE
-    if os.path.exists('./data/train.csv'):
-        train = pd.read_csv('./data/train.csv')
-        test = pd.read_csv('./data/test.csv')
+    if os.path.exists('./T809DATA_2023/08_boosting/data/train.csv'):
+        train = pd.read_csv('./T809DATA_2023/08_boosting/data/train.csv')
+        test = pd.read_csv('./T809DATA_2023/08_boosting/data/test.csv')
     else:
-        train = pd.read_csv('train.csv')
+        train = pd.read_csv('./08_boosting/data/train.csv')
         test = pd.read_csv('test.csv')
 
     # Concatenate the train and test set into a single dataframe

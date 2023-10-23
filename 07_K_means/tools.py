@@ -19,7 +19,7 @@ def load_iris():
     return iris.data, iris.target, [0, 1, 2]
 
 
-def image_to_numpy(path: str = './images/buoys.png'):
+def image_to_numpy(path: str = './T809DATA_2023/07_K_means/images/buoys.png'):
     '''Converts an image to a numpy array and returns
     it and the original width and height
     '''
